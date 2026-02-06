@@ -7,5 +7,15 @@
         "maxDuration": 30
       }
     }
+  ],
+  "routes": [
+    {
+      "src": "/api/generate-speech",
+      "dest": "/api/generate-speech.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
   ]
 }
