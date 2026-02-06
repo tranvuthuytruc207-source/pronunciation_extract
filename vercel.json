@@ -1,4 +1,10 @@
 {
+  "builds": [
+    {
+      "src": "api/generate-speech.ts",
+      "use": "@vercel/node"
+    }
+  ],
   "functions": {
     "api/generate-speech.ts": {
       "maxDuration": 30
