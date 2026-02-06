@@ -1,0 +1,33 @@
+/**
+ * Generates speech by sending a request to our secure backend API route.
+ * @param text The text to convert to speech.
+ * @returns A promise that resolves to the base64 encoded audio data.
+ */
+export async function generateSpeech(text: string): Promise<string> {
+  try {
+    const response = await fetch('/api/generate-speech', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'An unknown error occurred on the server.' }));
+      throw new Error(errorData.error || `Server responded with status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (!data.audioData) {
+      throw new Error("No audio data received from the server.");
+    }
+    
+    return data.audioData;
+
+  } catch (error) {
+    console.error("Error calling backend API:", error);
+    // Re-throw the error to be caught by the component
+    throw error;
+  }
+}
