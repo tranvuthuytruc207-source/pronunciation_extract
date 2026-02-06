@@ -1,7 +1,11 @@
 {
-  "functions": {
-    "api/generate-speech.ts": {
-      "maxDuration": 30
+  "builds": [
+    {
+      "src": "api/generate-speech.ts",
+      "use": "@vercel/node",
+      "config": {
+        "maxDuration": 30
+      }
     }
-  }
+  ]
 }
