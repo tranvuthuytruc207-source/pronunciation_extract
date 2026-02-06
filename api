@@ -1,0 +1,58 @@
+// /api/generate-speech.ts
+// This is a Vercel Serverless Function that runs on the backend.
+
+import { GoogleGenAI, Modality } from "@google/genai";
+
+export default async function handler(req, res) {
+  // Ensure this function only handles POST requests
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', ['POST']);
+    return res.status(405).end(`Method ${req.method} Not Allowed`);
+  }
+
+  // Ensure the API key is set in Vercel's environment variables
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+    console.error("API_KEY is not defined in environment variables.");
+    return res.status(500).json({ error: 'Server configuration error.' });
+  }
+
+  try {
+    const { text } = req.body;
+
+    // Validate input
+    if (!text || typeof text !== 'string' || text.trim().length === 0) {
+      return res.status(400).json({ error: 'Text input is required and must be a non-empty string.' });
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash-preview-tts",
+      contents: [{ parts: [{ text: `Please say: ${text}` }] }],
+      config: {
+        responseModalities: [Modality.AUDIO],
+        speechConfig: {
+          voiceConfig: {
+            // "Puck" has a voice profile often associated with British English.
+            prebuiltVoiceConfig: { voiceName: 'Puck' },
+          },
+        },
+      },
+    });
+
+    const audioData = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+
+    if (!audioData) {
+      console.error("No audio data received from Gemini API.");
+      return res.status(500).json({ error: "Failed to generate audio from the provider." });
+    }
+
+    // Send the successful response back to the client
+    return res.status(200).json({ audioData });
+
+  } catch (error) {
+    console.error("Error in /api/generate-speech:", error);
+    return res.status(500).json({ error: 'An internal server error occurred.' });
+  }
+}
