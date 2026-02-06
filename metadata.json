@@ -1,0 +1,4 @@
+{
+  "name": "UK Pronunciation Generator",
+  "description": "Enter a word, phrase, or sentence to hear and download the pronunciation in a UK English accent. This app uses the Google Gemini API for high-quality text-to-speech synthesis."
+}

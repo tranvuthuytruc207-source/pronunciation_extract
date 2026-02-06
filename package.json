@@ -1,0 +1,16 @@
+{
+  "name": "uk-pronunciation-generator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "UK Pronunciation Generator using Google Gemini API",
+  "scripts": {
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "@google/genai": "^1.40.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vercel": "^32.3.0"
+  }
+}

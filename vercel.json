@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/generate-speech.ts": {
+      "maxDuration": 30
+    }
+  }
+}
