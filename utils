@@ -1,0 +1,69 @@
+/**
+ * Decodes a base64 string into a Uint8Array.
+ * @param base64 The base64 encoded string.
+ * @returns A Uint8Array containing the decoded binary data.
+ */
+function decodeBase64(base64: string): Uint8Array {
+  const binaryString = atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+}
+
+/**
+ * Creates a WAV file Blob from base64 encoded raw PCM audio data.
+ * The Gemini TTS API returns audio as 16-bit PCM at a 24000 Hz sample rate.
+ * @param base64Pcm The base64 encoded PCM audio data.
+ * @returns A Blob representing the WAV file.
+ */
+export function createWavBlob(base64Pcm: string): Blob {
+  const pcmData = decodeBase64(base64Pcm);
+  
+  const sampleRate = 24000; // Gemini TTS standard sample rate
+  const numChannels = 1;     // Mono
+  const bitsPerSample = 16;  // 16-bit PCM
+  
+  const headerLength = 44;
+  const buffer = new ArrayBuffer(headerLength + pcmData.length);
+  const view = new DataView(buffer);
+
+  // RIFF chunk descriptor
+  writeString(view, 0, 'RIFF');
+  view.setUint32(4, 36 + pcmData.length, true); // ChunkSize
+  writeString(view, 8, 'WAVE');
+  
+  // "fmt " sub-chunk
+  writeString(view, 12, 'fmt ');
+  view.setUint32(16, 16, true); // Subchunk1Size (16 for PCM)
+  view.setUint16(20, 1, true); // AudioFormat (1 for PCM)
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  
+  const byteRate = sampleRate * numChannels * (bitsPerSample / 8);
+  view.setUint32(28, byteRate, true); // ByteRate
+  
+  const blockAlign = numChannels * (bitsPerSample / 8);
+  view.setUint16(32, blockAlign, true); // BlockAlign
+  
+  view.setUint16(34, bitsPerSample, true);
+  
+  // "data" sub-chunk
+  writeString(view, 36, 'data');
+  view.setUint32(40, pcmData.length, true); // Subchunk2Size
+
+  // Write PCM data
+  for (let i = 0; i < pcmData.length; i++) {
+    view.setUint8(headerLength + i, pcmData[i]);
+  }
+
+  return new Blob([view], { type: 'audio/wav' });
+}
+
+function writeString(view: DataView, offset: number, str: string) {
+  for (let i = 0; i < str.length; i++) {
+    view.setUint8(offset + i, str.charCodeAt(i));
+  }
+}
